@@ -8,13 +8,13 @@
     <string name="set_budget">Set Budget</string>
     <string name="view_pie_chart">View Pie Chart</string>
     <string name="expense_list_title">Expense History</string>
-    <string name="filter_category">Filter by Category</string>
+    <string name="filter_category">Category</string>
     <string name="filter_date">Filter by Date</string>
     <string name="amount">Amount</string>
     <string name="category">Category</string>
     <string name="date">Date</string>
     <string name="note">Note</string>
-    <string name="view_expense_history">View Expense History</string>
+    <string name="view_expense_history">Expense History</string>
     <string name="add_expense_title">Add Expense</string>
     <string name="save_expense">Save Expense</string>
     <string name="set_budget_title">Set Monthly Budget</string>
@@ -27,4 +27,11 @@
     <string name="empty_pie_chart">No data to display for this month.</string>
     <string name="input_error">Please fill all required fields correctly.</string>
     <string name="save_success">Saved successfully!</string>
+    <string name="back">Back</string>
+    <string name="monthly_nbudget">Monthly\nBudget</string>
+    <string name="total_nexpenses">Total\nExpenses</string>
+    <string name="remaining_nbalance">Remaining\nBalance</string>
+    <string name="rupees">₹</string>
+    <string name="see_all">See All</string>
+    <string name="filter">Filter</string>
 </resources>

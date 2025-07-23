@@ -14,6 +14,7 @@ import com.istech.expensestracker.viewmodel.ExpenseViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 import android.widget.Toast
+import com.istech.expensestracker.R
 
 /**
  * AddExpenseFragment allows the user to add a new expense.
@@ -34,6 +35,11 @@ class AddExpenseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val header = requireView().findViewById<android.view.View>(R.id.header_add_expense)
+        val title = header.findViewById<android.widget.TextView>(R.id.tv_header_title)
+        val back = header.findViewById<android.widget.ImageView>(R.id.iv_back)
+        title.text = getString(R.string.add_expense_title)
+        back.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         setupCategorySpinner()
         setupDatePicker()
         binding.btnSaveExpense.setOnClickListener { saveExpense() }

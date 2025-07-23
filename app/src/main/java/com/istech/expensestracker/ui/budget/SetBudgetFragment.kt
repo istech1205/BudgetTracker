@@ -13,6 +13,7 @@ import com.istech.expensestracker.viewmodel.BudgetViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 import android.widget.Toast
+import com.istech.expensestracker.R
 
 /**
  * SetBudgetFragment allows the user to set or edit the monthly budget.
@@ -32,6 +33,11 @@ class SetBudgetFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val header = requireView().findViewById<android.view.View>(R.id.header_set_budget)
+        val title = header.findViewById<android.widget.TextView>(R.id.tv_header_title)
+        val back = header.findViewById<android.widget.ImageView>(R.id.iv_back)
+        title.text = getString(R.string.set_budget_title)
+        back.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         setupMonthSpinner()
         setDefaults()
         binding.btnSaveBudget.setOnClickListener { saveBudget() }

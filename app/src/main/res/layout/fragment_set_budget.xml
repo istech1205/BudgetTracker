@@ -8,16 +8,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
-        <TextView
-            android:id="@+id/tv_set_budget_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/set_budget_title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textStyle="bold"
-            android:layout_marginBottom="24dp" />
+        <include
+            layout="@layout/header_common"
+            android:id="@+id/header_set_budget" />
 
         <EditText
             android:id="@+id/et_budget_amount"

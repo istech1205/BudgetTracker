@@ -4,22 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.istech.expensestracker.R
 import com.istech.expensestracker.databinding.FragmentPieChartBinding
 import com.istech.expensestracker.viewmodel.ExpenseViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Calendar
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import com.istech.expensestracker.R
-import android.widget.TextView
-import androidx.core.view.isVisible
-import android.widget.AdapterView
+import java.util.Calendar
 
 /**
  * PieChartFragment displays a pie chart of spending by category for a selected month and year.
@@ -29,7 +28,6 @@ class PieChartFragment : Fragment() {
     private var _binding: FragmentPieChartBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ExpenseViewModel by viewModels()
-    private lateinit var emptyView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -40,13 +38,9 @@ class PieChartFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        emptyView = TextView(requireContext()).apply {
-            text = getString(com.istech.expensestracker.R.string.empty_pie_chart)
-            textSize = 16f
-            setPadding(32, 32, 32, 32)
-            isVisible = false
-        }
-        (binding.pieChart.parent as ViewGroup).addView(emptyView)
+
+        binding.headerPieChart.tvHeaderTitle.text = getString(R.string.pie_chart_title)
+        binding.headerPieChart.ivBack.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         setupMonthSpinner()
         setDefaults()
         loadPieChart()
@@ -87,7 +81,7 @@ class PieChartFragment : Fragment() {
         lifecycleScope.launch {
             val categoryTotals = viewModel.getCategoryTotalsForMonth(month, year)
             val entries = categoryTotals.map { PieEntry(it.total.toFloat(), it.category) }
-            emptyView.isVisible = entries.isEmpty()
+            binding.noData.isVisible = entries.isEmpty()
             binding.pieChart.isVisible = entries.isNotEmpty()
             if (entries.isNotEmpty()) {
                 val dataSet = PieDataSet(entries, "").apply {

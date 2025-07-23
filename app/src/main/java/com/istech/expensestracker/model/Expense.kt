@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
 data class Expense(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val amount: Double,
+    val amount: Int,
     val category: String,
     val date: Long, // Store as epoch millis for easy sorting/filtering
     val note: String? = null

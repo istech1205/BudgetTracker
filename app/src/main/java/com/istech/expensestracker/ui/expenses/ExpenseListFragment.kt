@@ -40,15 +40,19 @@ class ExpenseListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val header = requireView().findViewById<android.view.View>(R.id.header_expense_list)
-        val title = header.findViewById<android.widget.TextView>(R.id.tv_header_title)
-        val back = header.findViewById<android.widget.ImageView>(R.id.iv_back)
-        title.text = getString(R.string.expense_list_title)
-        back.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
+
+        binding.headerExpenseList.tvHeaderTitle.text = getString(R.string.expense_list_title)
+        binding.headerExpenseList.ivBack.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         setupRecyclerView()
         setupCategorySpinner()
         setupDateFilter()
         observeExpenses()
+        adapter.onDeleteClick = { expense ->
+            showDeleteExpenseDialog(expense)
+        }
+        adapter.onUpdateClick = { expense ->
+            showUpdateExpenseDialog(expense)
+        }
     }
 
     /**
@@ -97,27 +101,26 @@ class ExpenseListFragment : Fragment() {
     private fun setupDateFilter() {
         binding.btnFilterDate.setOnClickListener {
             val calendar = Calendar.getInstance()
-            DatePickerDialog(
+            val dialog = DatePickerDialog(
                 requireContext(),
                 { _, year, month, dayOfMonth ->
-                    calendar.set(year, month, dayOfMonth)
+                    calendar.set(year, month, dayOfMonth, 0, 0, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
                     startDate = calendar.timeInMillis
-                    DatePickerDialog(
-                        requireContext(),
-                        { _, endYear, endMonth, endDayOfMonth ->
-                            calendar.set(endYear, endMonth, endDayOfMonth)
-                            endDate = calendar.timeInMillis
-                            observeExpenses()
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
+                    // Set endDate to end of the same day
+                    calendar.set(Calendar.HOUR_OF_DAY, 23)
+                    calendar.set(Calendar.MINUTE, 59)
+                    calendar.set(Calendar.SECOND, 59)
+                    calendar.set(Calendar.MILLISECOND, 999)
+                    endDate = calendar.timeInMillis
+                    observeExpenses()
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            )
+            // Do not restrict maxDate here, allow future dates for filtering
+            dialog.show()
         }
     }
 
@@ -125,17 +128,67 @@ class ExpenseListFragment : Fragment() {
      * Observes the paginated list of expenses from the ViewModel, applying filters if set.
      */
     private fun observeExpenses() {
-        val category = selectedCategory
-        val start = startDate
-        val end = endDate
-        val liveData = when {
-            category != null -> viewModel.getExpensesByCategoryPaged(category)
-            start != null && end != null -> viewModel.getExpensesByDatePaged(start, end)
-            else -> viewModel.getAllExpensesPaged()
-        }
+        val liveData = getFilteredExpensesLiveData()
         liveData.observe(viewLifecycleOwner) {
             adapter.submitData(lifecycle, it)
         }
+    }
+
+    private fun getFilteredExpensesLiveData() = when {
+        selectedCategory != null && startDate != null && endDate != null ->
+            viewModel.getExpensesByCategoryAndDatePaged(selectedCategory!!, startDate!!, endDate!!)
+
+        selectedCategory != null ->
+            viewModel.getExpensesByCategoryPaged(selectedCategory!!)
+
+        startDate != null && endDate != null ->
+            viewModel.getExpensesByDatePaged(startDate!!, endDate!!)
+
+        else ->
+            viewModel.getAllExpensesPaged()
+    }
+
+    private fun showDeleteExpenseDialog(expense: com.istech.expensestracker.model.Expense) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle(R.string.delete)
+            .setMessage(R.string.delete_expense_confirm)
+            .setPositiveButton(android.R.string.yes) { _, _ ->
+                viewModel.deleteExpense(expense)
+            }
+            .setNegativeButton(android.R.string.no, null)
+            .show()
+    }
+
+    private fun showUpdateExpenseDialog(expense: com.istech.expensestracker.model.Expense) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_update_expense, null)
+        val etAmount = dialogView.findViewById<android.widget.EditText>(R.id.etAmount)
+        val etNote = dialogView.findViewById<android.widget.EditText>(R.id.etNote)
+        val spinnerCategory = dialogView.findViewById<android.widget.Spinner>(R.id.spinnerCategory)
+        etAmount.setText(expense.amount.toString())
+        etNote.setText(expense.note ?: "")
+        val categories =
+            resources.getStringArray(com.istech.expensestracker.R.array.expense_categories)
+        val adapter = android.widget.ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            categories
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategory.adapter = adapter
+        val catIndex = categories.indexOf(expense.category)
+        if (catIndex >= 0) spinnerCategory.setSelection(catIndex)
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle(R.string.update)
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val amount = etAmount.text.toString().toIntOrNull() ?: return@setPositiveButton
+                val note = etNote.text.toString().takeIf { it.isNotBlank() }
+                val category = spinnerCategory.selectedItem.toString()
+                val updated = expense.copy(amount = amount, note = note, category = category)
+                viewModel.updateExpense(updated)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     override fun onDestroyView() {

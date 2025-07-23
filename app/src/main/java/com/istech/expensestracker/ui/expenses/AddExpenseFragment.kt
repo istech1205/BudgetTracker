@@ -35,22 +35,46 @@ class AddExpenseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val header = requireView().findViewById<android.view.View>(R.id.header_add_expense)
-        val title = header.findViewById<android.widget.TextView>(R.id.tv_header_title)
-        val back = header.findViewById<android.widget.ImageView>(R.id.iv_back)
-        title.text = getString(R.string.add_expense_title)
-        back.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
+        initViews()
+        handleClick()
+        initCallbacks()
+    }
+
+    private fun initCallbacks() {
         setupCategorySpinner()
         setupDatePicker()
-        binding.btnSaveExpense.setOnClickListener { saveExpense() }
+    }
+
+    private fun handleClick() {
+        binding.headerAddExpense.ivBack.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
+        binding.btnSaveExpense.setOnClickListener {
+            if (binding.etAmount.text.isNotBlank() && binding.etAmount.text.toString().toInt() > 0) {
+                saveExpense()
+
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Amount should not be less than 0",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    }
+
+    private fun initViews() {
+        binding.headerAddExpense.tvHeaderTitle.text = getString(R.string.add_expense_title)
+
     }
 
     /**
      * Sets up the category dropdown spinner.
      */
     private fun setupCategorySpinner() {
-        val categories = resources.getStringArray(com.istech.expensestracker.R.array.expense_categories)
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categories)
+        val categories =
+            resources.getStringArray(com.istech.expensestracker.R.array.expense_categories)
+        val adapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categories)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerCategory.adapter = adapter
     }
@@ -61,11 +85,24 @@ class AddExpenseFragment : Fragment() {
     private fun setupDatePicker() {
         binding.etDate.setOnClickListener {
             val calendar = Calendar.getInstance()
-            val dialog = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                selectedDate = calendar.timeInMillis
-                binding.etDate.setText(android.text.format.DateFormat.format("dd MMM yyyy", selectedDate))
-            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+            val dialog = DatePickerDialog(
+                requireContext(),
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    selectedDate = calendar.timeInMillis
+                    binding.etDate.setText(
+                        android.text.format.DateFormat.format(
+                            "dd MMM yyyy",
+                            selectedDate
+                        )
+                    )
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            // Disable future dates
+            dialog.datePicker.maxDate = System.currentTimeMillis()
             dialog.show()
         }
         binding.etDate.setText(android.text.format.DateFormat.format("dd MMM yyyy", selectedDate))
@@ -75,16 +112,29 @@ class AddExpenseFragment : Fragment() {
      * Collects input and saves the expense using the ViewModel.
      */
     private fun saveExpense() {
-        val amount = binding.etAmount.text.toString().toDoubleOrNull()
+        val amount = binding.etAmount.text.toString().toIntOrNull()
         val category = binding.spinnerCategory.selectedItem.toString()
         if (amount == null || category.isBlank()) {
-            Toast.makeText(requireContext(), getString(com.istech.expensestracker.R.string.input_error), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(com.istech.expensestracker.R.string.input_error),
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
         val note = binding.etNote.text.toString().takeIf { it.isNotBlank() }
-        val expense = com.istech.expensestracker.model.Expense(amount = amount, category = category, date = selectedDate, note = note)
+        val expense = com.istech.expensestracker.model.Expense(
+            amount = amount,
+            category = category,
+            date = selectedDate,
+            note = note
+        )
         viewModel.insertExpense(expense)
-        Toast.makeText(requireContext(), getString(com.istech.expensestracker.R.string.save_success), Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            requireContext(),
+            getString(com.istech.expensestracker.R.string.save_success),
+            Toast.LENGTH_SHORT
+        ).show()
         requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 

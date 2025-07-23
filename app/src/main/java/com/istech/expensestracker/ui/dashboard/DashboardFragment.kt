@@ -5,15 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.istech.expensestracker.R
 import com.istech.expensestracker.databinding.FragmentDashboardBinding
@@ -22,6 +18,18 @@ import com.istech.expensestracker.viewmodel.BudgetViewModel
 import com.istech.expensestracker.viewmodel.ExpenseViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import android.widget.Toast
+import com.google.android.material.button.MaterialButton
+import android.widget.NumberPicker
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.core.util.Consumer
 
 /**
  * DashboardFragment displays the monthly budget, total expenses, remaining balance,
@@ -37,8 +45,8 @@ class DashboardFragment : Fragment() {
     private var selectedCategory: String? = null
     private var startDate: Long? = null
     private var endDate: Long? = null
-    private var filterDialog: BottomSheetDialog? = null
-    private var categoryDialog: BottomSheetDialog? = null
+    private var selectedMonth: Int = -1
+    private var selectedYear: Int = -1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -50,22 +58,70 @@ class DashboardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initData()
+        updateMonthButton()
+        binding.btnSelectMonth.setOnClickListener {
+            showMonthYearPicker()
+        }
+
         setupSummaryObservers()
-        setupDashboardDateFilter()
-        setupExpenseHistoryRecycler()
+
+        setupPieChart()
+        handleClick()
+
+    }
+
+    private fun handleClick() {
         binding.llAddExpense.setOnClickListener {
             findNavController().navigate(R.id.action_dashboard_to_addExpense)
         }
         binding.llSetBudget.setOnClickListener {
             findNavController().navigate(R.id.action_dashboard_to_setBudget)
         }
-        binding.ivSeeProgress.setOnClickListener {
-            findNavController().navigate(R.id.action_dashboard_to_pieChart)
+        binding.btHistory.setOnClickListener {
+            findNavController().navigate(R.id.action_dashboard_to_expenseList)
         }
-        binding.btCategory.setOnClickListener {
-            showCategoryBottomSheet()
-        }
-        // See All button is currently commented out
+    }
+
+    private fun initData() {
+        val calendar = Calendar.getInstance()
+        selectedMonth = calendar.get(Calendar.MONTH) + 1
+        selectedYear = calendar.get(Calendar.YEAR)
+    }
+
+    private fun updateMonthButton() {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.MONTH, selectedMonth - 1)
+        val monthName =
+            cal.getDisplayName(Calendar.MONTH, Calendar.LONG, java.util.Locale.getDefault())
+        binding.btnSelectMonth.text = "$monthName $selectedYear"
+    }
+
+    private fun showMonthYearPicker() {
+        // Custom dialog with NumberPickers for month and year
+        val dialogView = layoutInflater.inflate(R.layout.dialog_month_year_picker, null)
+        val monthPicker = dialogView.findViewById<NumberPicker>(R.id.monthPicker)
+        val yearPicker = dialogView.findViewById<NumberPicker>(R.id.yearPicker)
+        val months = resources.getStringArray(R.array.months)
+        monthPicker.minValue = 1
+        monthPicker.maxValue = 12
+        monthPicker.displayedValues = months
+        monthPicker.value = selectedMonth
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        yearPicker.minValue = currentYear - 10
+        yearPicker.maxValue = currentYear + 10
+        yearPicker.value = selectedYear
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.select_month))
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                selectedMonth = monthPicker.value
+                selectedYear = yearPicker.value
+                updateMonthButton()
+                loadPieChart(selectedMonth, selectedYear)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+        builder.show()
     }
 
     /**
@@ -79,7 +135,7 @@ class DashboardFragment : Fragment() {
         expenseViewModel.loadTotalExpensesForMonth(month, year)
         budgetViewModel.budget.observe(viewLifecycleOwner) { budget ->
             binding.tvMonthlyBudget.text =
-                getString(R.string.rupees) + (budget?.amount?.toString() ?: "0.0")
+                getString(R.string.rupees) + (budget?.amount?.toString() ?: "0")
             updateRemainingBalance()
         }
         expenseViewModel.totalExpenses.observe(viewLifecycleOwner) { total ->
@@ -89,91 +145,51 @@ class DashboardFragment : Fragment() {
     }
 
 
-    private fun setupDashboardDateFilter() {
-        binding.btDate.setOnClickListener {
-            showDatePicker()
-        }
+    /**
+     * Sets up and loads the pie chart for the current month and year.
+     */
+    private fun setupPieChart() {
+        loadPieChart(selectedMonth, selectedYear)
     }
 
-    private fun setupExpenseHistoryRecycler() {
-        expenseAdapter = ExpenseAdapter()
-        binding.rvDashboardExpenses.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvDashboardExpenses.adapter = expenseAdapter
-        observeDashboardExpenses()
-    }
+    private fun loadPieChart(month: Int, year: Int) {
+        lifecycleScope.launch {
+            val categoryTotals = expenseViewModel.getCategoryTotalsForMonth(month, year)
+            val entries = categoryTotals.map { PieEntry(it.total.toFloat(), it.category) }
+            val pieChart = binding.pieChart
+            pieChart.isVisible = entries.isNotEmpty()
+            binding.tvNoPieChart.isVisible = entries.isEmpty()
+            val layoutParams = binding.llStatsLayout.layoutParams as ConstraintLayout.LayoutParams
 
+            if (entries.isNotEmpty()) {
+                pieChart.visibility = View.VISIBLE
+                binding.tvNoPieChart.visibility = View.GONE
 
-    private fun showCategoryBottomSheet() {
-        val dialog = BottomSheetDialog(requireContext())
-        val container = LinearLayout(requireContext())
-        container.orientation = LinearLayout.VERTICAL
-        val categories = resources.getStringArray(R.array.expense_categories)
-        categories.forEach { category ->
-            val tv = TextView(requireContext())
-            tv.text = category
-            tv.setPadding(40, 40, 40, 40)
-            tv.textSize = 18f
-            tv.setOnClickListener {
-                selectedCategory = category
-                observeDashboardExpenses()
-                dialog.dismiss()
+                layoutParams.topToBottom = pieChart.id
+
+            } else {
+                pieChart.visibility = View.INVISIBLE
+                binding.tvNoPieChart.visibility = View.VISIBLE
+
+                layoutParams.topToBottom = binding.tvNoPieChart.id
             }
-            container.addView(tv)
-        }
-        val tvClear = TextView(requireContext())
-        tvClear.text = getString(R.string.filter_category) + " (Clear)"
-        tvClear.setPadding(40, 40, 40, 40)
-        tvClear.textSize = 16f
-        tvClear.setOnClickListener {
-            selectedCategory = null
-            observeDashboardExpenses()
-            dialog.dismiss()
-        }
-        container.addView(tvClear)
-        dialog.setContentView(container)
-        dialog.show()
-        categoryDialog = dialog
-    }
 
-    private fun showDatePicker() {
-        val calendar = Calendar.getInstance()
-        DatePickerDialog(
-            requireContext(),
-            { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                startDate = calendar.timeInMillis
-                DatePickerDialog(
-                    requireContext(),
-                    { _, endYear, endMonth, endDayOfMonth ->
-                        calendar.set(endYear, endMonth, endDayOfMonth)
-                        endDate = calendar.timeInMillis
-                        observeDashboardExpenses()
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-                ).show()
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
+            binding.llStatsLayout.layoutParams = layoutParams
 
-    private fun observeDashboardExpenses() {
-        val category = selectedCategory
-        val start = startDate
-        val end = endDate
-        val liveData = when {
-            category != null && start != null && end != null -> expenseViewModel.getExpensesByCategoryPaged(
-                category
-            ) // You can implement a combined filter if needed
-            category != null -> expenseViewModel.getExpensesByCategoryPaged(category)
-            start != null && end != null -> expenseViewModel.getExpensesByDatePaged(start, end)
-            else -> expenseViewModel.getAllExpensesPaged()
-        }
-        liveData.observe(viewLifecycleOwner) {
-            expenseAdapter.submitData(lifecycle, it)
+            if (entries.isNotEmpty()) {
+                val dataSet = PieDataSet(entries, "").apply {
+                    setColors(*com.github.mikephil.charting.utils.ColorTemplate.MATERIAL_COLORS)
+                    setDrawValues(false) // Hide values on slices
+                }
+                val data = PieData(dataSet)
+                data.setDrawValues(false) // Hide values on slices
+                pieChart.data = data
+                pieChart.setDrawEntryLabels(false) // Hide labels on slices
+                pieChart.invalidate()
+                binding.pieChart.description = null
+            } else {
+                pieChart.clear()
+            }
         }
     }
 
@@ -181,8 +197,8 @@ class DashboardFragment : Fragment() {
      * Updates the remaining balance based on budget and expenses.
      */
     private fun updateRemainingBalance() {
-        val budget = budgetViewModel.budget.value?.amount ?: 0.0
-        val expenses = expenseViewModel.totalExpenses.value ?: 0.0
+        val budget = budgetViewModel.budget.value?.amount ?: 0
+        val expenses = expenseViewModel.totalExpenses.value ?: 0
         val remaining = budget - expenses
         binding.tvRemainingBalance.text = getString(R.string.rupees) + remaining.toString()
     }

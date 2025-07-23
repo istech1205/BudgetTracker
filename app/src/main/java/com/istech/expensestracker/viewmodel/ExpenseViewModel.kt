@@ -39,6 +39,12 @@ class ExpenseViewModel @Inject constructor(
         repository.getExpensesByDatePaged(startDate, endDate).asLiveData()
 
     /**
+     * Returns a LiveData stream of expenses filtered by category and date range, paginated.
+     */
+    fun getExpensesByCategoryAndDatePaged(category: String, startDate: Long, endDate: Long): LiveData<PagingData<Expense>> =
+        repository.getExpensesByCategoryAndDatePaged(category, startDate, endDate).asLiveData()
+
+    /**
      * Inserts a new expense into the database.
      */
     fun insertExpense(expense: Expense) {
@@ -59,8 +65,8 @@ class ExpenseViewModel @Inject constructor(
         viewModelScope.launch { repository.deleteExpense(expense) }
     }
 
-    private val _totalExpenses = MutableLiveData<Double>()
-    val totalExpenses: LiveData<Double> = _totalExpenses
+    private val _totalExpenses = MutableLiveData<Int>()
+    val totalExpenses: LiveData<Int> = _totalExpenses
 
     /**
      * Loads the total expenses for the given month and year.

@@ -30,11 +30,16 @@ class ExpenseRepository @Inject constructor(
             expenseDao.getExpensesByDatePaged(startDate, endDate)
         }.flow
 
+    fun getExpensesByCategoryAndDatePaged(category: String, startDate: Long, endDate: Long, pageSize: Int = 20): Flow<PagingData<Expense>> =
+        Pager(PagingConfig(pageSize = pageSize)) {
+            expenseDao.getExpensesByCategoryAndDatePaged(category, startDate, endDate)
+        }.flow
+
     suspend fun insertExpense(expense: Expense) = expenseDao.insertExpense(expense)
     suspend fun updateExpense(expense: Expense) = expenseDao.updateExpense(expense)
     suspend fun deleteExpense(expense: Expense) = expenseDao.deleteExpense(expense)
-    suspend fun getTotalExpensesForMonth(month: String, year: String): Double =
-        expenseDao.getTotalExpensesForMonth(month, year) ?: 0.0
+    suspend fun getTotalExpensesForMonth(month: String, year: String): Int =
+        expenseDao.getTotalExpensesForMonth(month, year) ?: 0
     suspend fun getCategoryTotalsForMonth(month: String, year: String): List<CategoryTotal> =
         expenseDao.getCategoryTotalsForMonth(month, year)
 } 

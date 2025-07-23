@@ -33,14 +33,47 @@ class SetBudgetFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val header = requireView().findViewById<android.view.View>(R.id.header_set_budget)
-        val title = header.findViewById<android.widget.TextView>(R.id.tv_header_title)
-        val back = header.findViewById<android.widget.ImageView>(R.id.iv_back)
-        title.text = getString(R.string.set_budget_title)
-        back.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
+        // Observe changes to month/year and prefill budget
+        initViews()
+        initCallbacks()
+        handleClick()
+        // Initial prefill
+        loadAndPrefillBudget()
+    }
+
+    private fun handleClick() {
+        binding.spinnerMonth.onItemSelectedListener =
+            object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: android.widget.AdapterView<*>, view: View?, position: Int, id: Long
+                ) {
+                    loadAndPrefillBudget()
+                }
+
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+            }
+        binding.etYear.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) loadAndPrefillBudget()
+        }
+        binding.btnSaveBudget.setOnClickListener { saveBudget() }
+    }
+
+    private fun initCallbacks() {
         setupMonthSpinner()
         setDefaults()
-        binding.btnSaveBudget.setOnClickListener { saveBudget() }
+        // Observe budget LiveData to prefill
+        viewModel.budget.observe(viewLifecycleOwner) { budget ->
+            if (budget != null) {
+                binding.etBudgetAmount.setText(budget.amount.toString())
+            } else {
+                binding.etBudgetAmount.setText("")
+            }
+        }
+    }
+
+    private fun initViews() {
+        binding.headerSetBudget.tvHeaderTitle.text = getString(R.string.set_budget_title)
+        binding.headerSetBudget.ivBack.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
     }
 
     /**
@@ -62,20 +95,43 @@ class SetBudgetFragment : Fragment() {
         binding.etYear.setText(calendar.get(Calendar.YEAR).toString())
     }
 
+    private fun loadAndPrefillBudget() {
+        val month = binding.spinnerMonth.selectedItemPosition + 1
+        val year = binding.etYear.text.toString().toIntOrNull() ?: return
+        viewModel.loadBudget(month, year)
+    }
+
     /**
      * Collects input and saves the budget using the ViewModel.
      */
     private fun saveBudget() {
-        val amount = binding.etBudgetAmount.text.toString().toDoubleOrNull()
+        val amount = binding.etBudgetAmount.text.toString().toIntOrNull()
+        if (amount != null) {
+            if (amount < 1000) {
+                Toast.makeText(
+                    requireContext(), "Budget should not be less than 1000", Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
+        }
         val month = binding.spinnerMonth.selectedItemPosition + 1
         val year = binding.etYear.text.toString().toIntOrNull()
         if (amount == null || year == null) {
-            Toast.makeText(requireContext(), getString(com.istech.expensestracker.R.string.input_error), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(com.istech.expensestracker.R.string.input_error),
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
-        val budget = com.istech.expensestracker.model.Budget(amount = amount, month = month, year = year)
+        val budget =
+            com.istech.expensestracker.model.Budget(amount = amount, month = month, year = year)
         viewModel.insertOrUpdateBudget(budget)
-        Toast.makeText(requireContext(), getString(com.istech.expensestracker.R.string.save_success), Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            requireContext(),
+            getString(com.istech.expensestracker.R.string.save_success),
+            Toast.LENGTH_SHORT
+        ).show()
         requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 

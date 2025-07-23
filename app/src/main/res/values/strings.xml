@@ -34,4 +34,9 @@
     <string name="rupees">₹</string>
     <string name="see_all">See All</string>
     <string name="filter">Filter</string>
+    <string name="select_month">Select Month</string>
+    <string name="no_data_found">No data found</string>
+    <string name="update">Update</string>
+    <string name="delete">Delete</string>
+    <string name="delete_expense_confirm">Are you sure you want to delete this expense?</string>
 </resources>

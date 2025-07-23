@@ -21,14 +21,17 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses ORDER BY date DESC")
     fun getAllExpensesPaged(): PagingSource<Int, Expense>
 
-    @Query("SELECT * FROM expenses WHERE category = :category ORDER BY date DESC")
+    @Query("SELECT * FROM expenses WHERE category = :category  ORDER BY date DESC")
     fun getExpensesByCategoryPaged(category: String): PagingSource<Int, Expense>
 
     @Query("SELECT * FROM expenses WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getExpensesByDatePaged(startDate: Long, endDate: Long): PagingSource<Int, Expense>
 
+    @Query("SELECT * FROM expenses WHERE category = :category AND date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getExpensesByCategoryAndDatePaged(category: String, startDate: Long, endDate: Long): PagingSource<Int, Expense>
+
     @Query("SELECT SUM(amount) FROM expenses WHERE strftime('%m', date / 1000, 'unixepoch') = :month AND strftime('%Y', date / 1000, 'unixepoch') = :year")
-    suspend fun getTotalExpensesForMonth(month: String, year: String): Double?
+    suspend fun getTotalExpensesForMonth(month: String, year: String): Int?
 
     @Query("SELECT category, SUM(amount) as total FROM expenses WHERE strftime('%m', date / 1000, 'unixepoch') = :month AND strftime('%Y', date / 1000, 'unixepoch') = :year GROUP BY category")
     suspend fun getCategoryTotalsForMonth(month: String, year: String): List<CategoryTotal>
@@ -39,5 +42,5 @@ interface ExpenseDao {
  */
 data class CategoryTotal(
     val category: String,
-    val total: Double
+    val total: Int
 ) 

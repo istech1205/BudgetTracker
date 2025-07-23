@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Budget Tracker</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="monthly_budget">Monthly Budget: </string>
+    <string name="total_expenses">Total Expenses: </string>
+    <string name="remaining_balance">Remaining Balance: </string>
+    <string name="add_expense">Add Expense</string>
+    <string name="set_budget">Set Budget</string>
+    <string name="view_pie_chart">View Pie Chart</string>
+    <string name="expense_list_title">Expense History</string>
+    <string name="filter_category">Filter by Category</string>
+    <string name="filter_date">Filter by Date</string>
+    <string name="amount">Amount</string>
+    <string name="category">Category</string>
+    <string name="date">Date</string>
+    <string name="note">Note</string>
+    <string name="view_expense_history">View Expense History</string>
+    <string name="add_expense_title">Add Expense</string>
+    <string name="save_expense">Save Expense</string>
+    <string name="set_budget_title">Set Monthly Budget</string>
+    <string name="budget_amount">Budget Amount</string>
+    <string name="month">Month</string>
+    <string name="year">Year</string>
+    <string name="save_budget">Save Budget</string>
+    <string name="pie_chart_title">Spending by Category</string>
+    <string name="empty_expense_list">No expenses found. Start by adding a new expense!</string>
+    <string name="empty_pie_chart">No data to display for this month.</string>
+    <string name="input_error">Please fill all required fields correctly.</string>
+    <string name="save_success">Saved successfully!</string>
+</resources>

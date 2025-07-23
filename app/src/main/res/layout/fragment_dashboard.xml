@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dashboard_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal"
+    android:background="@color/white">
+
+    <TextView
+        android:id="@+id/tv_dashboard_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dashboard_title"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:id="@+id/tv_monthly_budget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/monthly_budget"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tv_total_expenses"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/total_expenses"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tv_remaining_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/remaining_balance"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btn_view_expense_history"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/view_expense_history"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btn_add_expense"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/add_expense"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btn_set_budget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/set_budget"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/btn_view_pie_chart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/view_pie_chart" />
+
+</LinearLayout> 

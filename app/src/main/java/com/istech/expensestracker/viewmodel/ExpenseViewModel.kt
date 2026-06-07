@@ -83,4 +83,25 @@ class ExpenseViewModel @Inject constructor(
     suspend fun getCategoryTotalsForMonth(month: Int, year: Int): List<com.istech.expensestracker.data.CategoryTotal> {
         return repository.getCategoryTotalsForMonth(month.toString().padStart(2, '0'), year.toString())
     }
+
+    private val _filteredTotal = MutableLiveData<Int>()
+    val filteredTotal: LiveData<Int> = _filteredTotal
+
+    /**
+     * Loads the total expense amount for the current filter state (all, by category, by date, or both).
+     */
+    fun loadFilteredTotal(category: String?, startDate: Long?, endDate: Long?) {
+        viewModelScope.launch {
+            _filteredTotal.value = when {
+                category != null && startDate != null && endDate != null ->
+                    repository.getTotalExpensesByCategoryAndDate(category, startDate, endDate)
+                category != null ->
+                    repository.getTotalExpensesByCategory(category)
+                startDate != null && endDate != null ->
+                    repository.getTotalExpensesByDate(startDate, endDate)
+                else ->
+                    repository.getTotalExpensesAll()
+            }
+        }
+    }
 } 

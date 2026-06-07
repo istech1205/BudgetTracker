@@ -35,6 +35,18 @@ interface ExpenseDao {
 
     @Query("SELECT category, SUM(amount) as total FROM expenses WHERE strftime('%m', date / 1000, 'unixepoch') = :month AND strftime('%Y', date / 1000, 'unixepoch') = :year GROUP BY category")
     suspend fun getCategoryTotalsForMonth(month: String, year: String): List<CategoryTotal>
+
+    @Query("SELECT SUM(amount) FROM expenses")
+    suspend fun getTotalExpensesAll(): Int?
+
+    @Query("SELECT SUM(amount) FROM expenses WHERE category = :category")
+    suspend fun getTotalExpensesByCategory(category: String): Int?
+
+    @Query("SELECT SUM(amount) FROM expenses WHERE date BETWEEN :startDate AND :endDate")
+    suspend fun getTotalExpensesByDate(startDate: Long, endDate: Long): Int?
+
+    @Query("SELECT SUM(amount) FROM expenses WHERE category = :category AND date BETWEEN :startDate AND :endDate")
+    suspend fun getTotalExpensesByCategoryAndDate(category: String, startDate: Long, endDate: Long): Int?
 }
 
 /**

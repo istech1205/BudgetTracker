@@ -42,4 +42,16 @@ class ExpenseRepository @Inject constructor(
         expenseDao.getTotalExpensesForMonth(month, year) ?: 0
     suspend fun getCategoryTotalsForMonth(month: String, year: String): List<CategoryTotal> =
         expenseDao.getCategoryTotalsForMonth(month, year)
+
+    suspend fun getTotalExpensesAll(): Int =
+        expenseDao.getTotalExpensesAll() ?: 0
+
+    suspend fun getTotalExpensesByCategory(category: String): Int =
+        expenseDao.getTotalExpensesByCategory(category) ?: 0
+
+    suspend fun getTotalExpensesByDate(startDate: Long, endDate: Long): Int =
+        expenseDao.getTotalExpensesByDate(startDate, endDate) ?: 0
+
+    suspend fun getTotalExpensesByCategoryAndDate(category: String, startDate: Long, endDate: Long): Int =
+        expenseDao.getTotalExpensesByCategoryAndDate(category, startDate, endDate) ?: 0
 } 

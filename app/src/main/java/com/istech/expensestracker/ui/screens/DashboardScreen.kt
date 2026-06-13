@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -85,26 +87,42 @@ fun DashboardScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
-            // Month Selector
+            // Top Bar: History and Month Selector (50-50 split)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showMonthPicker = true },
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = null,
-                    tint = PrimaryDark,
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-                Text(
-                    text = dashboardViewModel.monthYearDisplay,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryDark
-                )
+                // Expense History Button (50%)
+                Button(
+                    onClick = onViewHistory,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkRed)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("History")
+                }
+
+                // Month Selector Button (50%)
+                Button(
+                    onClick = { showMonthPicker = true },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryDark)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(dashboardViewModel.monthYearDisplay)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -153,55 +171,46 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Action Buttons
-            Button(
-                onClick = onAddExpense,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryDark)
+            // Action Buttons Row (50-50 split)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text("Add Expense")
+                // Add Expense Button (50%)
+                Button(
+                    onClick = onAddExpense,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryDark)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Add Expense")
+                }
+
+                // Set Budget Button (50%)
+                Button(
+                    onClick = onSetBudget,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkRed)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Wallet,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Set Budget")
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onSetBudget,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkRed)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Wallet,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text("Set Budget")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onViewHistory,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkGreen)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text("Expense History")
-            }
+            // Footer Space (80.dp)
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 
